@@ -7,9 +7,12 @@ import type {
 import { useCallback, useRef, useState, useEffect } from "react";
 
 export default function PDFViewer(props: PdfProps) {
-  PDFJS.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+  PDFJS.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url
+  ).toString();
 
-  const {src}=props;
+  const { src } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy>();
@@ -40,7 +43,7 @@ export default function PDFViewer(props: PdfProps) {
             renderTask = page.render(renderContext);
             return renderTask.promise;
           } catch (error) {
-              console.log(error);
+            console.log(error);
           }
         })
         .catch((error) => console.log(error));
@@ -51,6 +54,20 @@ export default function PDFViewer(props: PdfProps) {
   useEffect(() => {
     renderPage(currentPage, pdfDoc);
   }, [pdfDoc, currentPage, renderPage]);
+
+  useEffect(() => {
+    const handleRightClick = (event: React.MouseEvent) => {
+      event.preventDefault(); // Prevent the context menu
+    };
+
+    // Attach the event listener to the whole document
+    document.addEventListener("contextmenu", handleRightClick);
+
+    // Cleanup the event listener when the component is unmounted
+    return () => {
+      document.removeEventListener("contextmenu", handleRightClick);
+    };
+  }, []);
 
   useEffect(() => {
     const loadingTask = PDFJS.getDocument(src);
